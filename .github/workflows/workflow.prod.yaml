@@ -1,0 +1,40 @@
+name: Continuous Integration and Deployment
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  continuous-integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Using Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.
+          
+      - name: Run install, build and test
+        run: |
+          npm install
+          npm run build
+          npm test
+          
+      - name: Deploy to EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOSTNAME: ${{ secrets.EC2_HOST }}
+          USER_NAME: ${{ secrets.EC2_USERNAME }}
+          
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          rsync -avz --exclude 'node_modules' -e "ssh -i private_key -o StrictHostKeyChecking=no" ./ ${USER_NAME}@${HOSTNAME}:~/teste/
+          ssh -i private_key -o StrictHostKeyChecking=no ${USER_NAME}@${HOSTNAME} '
+            cd ~/teste
+            docker-compose build
+            docker-compose up -d
+          '
