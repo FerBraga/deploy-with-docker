@@ -20,7 +20,7 @@ function App() {
         .then((data) => setContent(data))
     }
   }, [content, setContent])
-
+  const today = new Date();
   return (
     <div className="App">
       <p className="Contrast-text"><b>🐋 DATEBAYO!!!- Trybe</b></p>
@@ -35,6 +35,8 @@ function App() {
               {item.title}
             </h1>
             <p dangerouslySetInnerHTML={{__html: item.message}}></p>
+            <p>{today}</p>
+
           </div>
         ))
       }        
