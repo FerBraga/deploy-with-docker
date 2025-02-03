@@ -1,2 +1,3 @@
 *.pem
 deploy-with-docker-key.pem
+node_modules/
