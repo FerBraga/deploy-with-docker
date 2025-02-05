@@ -1,32 +1,42 @@
 version: "3"
+
 services:
-  nginx:
-    image: nginx:alpine
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
     ports:
       - "80:80"
+      - "8080:8080"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./frontend/build:/usr/share/nginx/html
-    depends_on:
-      - frontend
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
   frontend:
     build: frontend/
     restart: always
-    ports:
-      - 3000:3000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     depends_on:
       - backend
     volumes:
       - ./frontend/src:/frontend/src
+
   backend:
     build: backend/
     restart: always
-    ports:
-      - 3001:3001
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=3001"
     environment:
       - DB_HOST=database
     depends_on:
       - database
+
   database:
     image: betrybe/docker-compose-example-database:v1
     restart: always
