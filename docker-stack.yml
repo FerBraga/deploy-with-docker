@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.swarm=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+  frontend:
+    build: frontend/
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`ec2-54-233-44-141.sa-east-1.compute.amazonaws.com`) && PathPrefix(`/`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+
+  backend:
+    build: backend/
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`ec2-54-233-44-141.sa-east-1.compute.amazonaws.com`) && PathPrefix(`/api`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=3001"
+    environment:
+      - DB_HOST=database
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+
+  database:
+    image: betrybe/docker-compose-example-database:v1
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
