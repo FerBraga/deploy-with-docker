@@ -36,5 +36,7 @@ jobs:
           rsync -avz --exclude 'node_modules' -e "ssh -i private_key -o StrictHostKeyChecking=no" ./ ${USER_NAME}@${HOSTNAME}:~/teste/
           ssh -i private_key -o StrictHostKeyChecking=no ${USER_NAME}@${HOSTNAME} '
             cd ~/teste
-            docker stack deploy -c docker-stack.yml myapp --with-registry-auth
+              docker-compose build
+              docker-compose push
+              docker stack deploy -c docker-stack.yml myapp
           '
