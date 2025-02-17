@@ -3,6 +3,8 @@ name: Continuous Integration and Deployment
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*.*.*'
   pull_request:
     branches: [ main ]
 
@@ -11,32 +13,54 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Using Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16.
-          
-      - name: Run Frontend install, build and test
-        run: |
-          cd frontend
-          npm install --legacy-peer-deps
-          npm run build
-          npm test
-          
-      - name: Deploy to EC2
-        env:
-          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          HOSTNAME: ${{ secrets.EC2_HOST }}
-          USER_NAME: ${{ secrets.EC2_USERNAME }}
-          
-        run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          rsync -avz --exclude 'node_modules' -e "ssh -i private_key -o StrictHostKeyChecking=no" ./ ${USER_NAME}@${HOSTNAME}:~/teste/
-          ssh -i private_key -o StrictHostKeyChecking=no ${USER_NAME}@${HOSTNAME} '
-            cd ~/teste
-              docker-compose build
-              docker-compose push
-              docker stack deploy -c docker-stack.yml myapp
-          '
+    - uses: actions/checkout@v3
+
+    - name: Get version
+      id: get_version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=latest" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Using Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: 16.
+
+    - name: Run Frontend install, build and test
+      run: |
+        cd frontend
+        npm install --legacy-peer-deps
+        npm run build
+        npm test
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push
+      run: |
+        VERSION=${{ steps.get_version.outputs.VERSION }}
+        docker build -t yourusername/frontend:$VERSION ./frontend
+        docker build -t yourusername/backend:$VERSION ./backend
+        docker push yourusername/frontend:$VERSION
+        docker push yourusername/backend:$VERSION
+
+    - name: Deploy to EC2
+      env:
+        PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+        HOSTNAME: ${{ secrets.EC2_HOST }}
+        USER_NAME: ${{ secrets.EC2_USERNAME }}
+        VERSION: ${{ steps.get_version.outputs.VERSION }}
+      run: |
+        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+        rsync -avz --exclude 'node_modules' -e "ssh -i private_key -o StrictHostKeyChecking=no" ./ ${USER_NAME}@${HOSTNAME}:~/teste/
+        ssh -i private_key -o StrictHostKeyChecking=no ${USER_NAME}@${HOSTNAME} '
+          cd ~/teste
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          docker stack deploy -c docker-stack.yml myapp
+        '
