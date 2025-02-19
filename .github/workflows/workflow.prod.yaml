@@ -46,9 +46,7 @@ jobs:
       run: |
         VERSION=${{ steps.get_version.outputs.VERSION }}
         docker build -t bragafer/frontend:$VERSION ./frontend
-        docker build -t bragafer/backend:$VERSION ./backend
         docker push bragafer/frontend:$VERSION
-        docker push bragafer/backend:$VERSION
 
     - name: Deploy to EC2
       env:

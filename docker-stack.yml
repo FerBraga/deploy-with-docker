@@ -32,7 +32,7 @@ services:
         order: start-first
 
   backend:
-    image: bragafer/backend:latest
+    build: backend/
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`ec2-54-233-44-141.sa-east-1.compute.amazonaws.com`) && PathPrefix(`/api`)"
