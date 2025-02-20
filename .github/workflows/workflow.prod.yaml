@@ -61,5 +61,5 @@ jobs:
           cd ~/teste
           VERSION=${{ steps.get_version.outputs.VERSION }}
           docker build -t backend:${VERSION} ./backend
-          VERSION=${VERSION} docker stack deploy -c docker-stack.yml myapp
+          env VERSION=${VERSION} docker stack deploy -c docker-stack.yml myapp
         '
