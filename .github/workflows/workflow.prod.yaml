@@ -60,5 +60,6 @@ jobs:
         ssh -i private_key -o StrictHostKeyChecking=no ${USER_NAME}@${HOSTNAME} '
           cd ~/teste
           VERSION=${{ steps.get_version.outputs.VERSION }}
+          docker build -t backend:${VERSION} ./backend
           docker stack deploy -c docker-stack.yml myapp
         '
