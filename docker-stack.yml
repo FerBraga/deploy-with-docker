@@ -32,7 +32,7 @@ services:
         order: start-first
 
   backend:
-    build: backend:${VERSION}
+    image: backend:${VERSION}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`ec2-54-233-44-141.sa-east-1.compute.amazonaws.com`) && PathPrefix(`/api`)"
