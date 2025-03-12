@@ -5,7 +5,7 @@ services:
     image: traefik:v2.10
     command:
       - "--providers.docker=true"
-      - "--providers.docker.swarm=true"
+      - "--providers.docker.swarmMode=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
     ports:
