@@ -22,7 +22,7 @@ services:
     image: bragafer/frontend:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`ec2-54-233-44-141.sa-east-1.compute.amazonaws.com`) && PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.rule=Host(`ec2-56-124-112-102.sa-east-1.compute.amazonaws.com`) && PathPrefix(`/`)"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     deploy:
       replicas: 2
@@ -35,7 +35,7 @@ services:
     image: backend:${VERSION}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`ec2-54-233-44-141.sa-east-1.compute.amazonaws.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.rule=Host(`ec2-56-124-112-102.sa-east-1.compute.amazonaws.com`) && PathPrefix(`/api`)"
       - "traefik.http.services.backend.loadbalancer.server.port=3001"
     environment:
       - DB_HOST=database
